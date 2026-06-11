@@ -107,14 +107,22 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split('.').pop() || '';
     const filename = `${timestamp}-${randomStr}.${ext}`;
 
-    const bytes = await file.arrayBuffer();
+    let publicUrl = '';
 
-    // Save file locally to public/uploads
-    await ensureUploadDir();
-    const filepath = join(UPLOAD_DIR, filename);
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
-    const publicUrl = `/uploads/${filename}`;
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      // Import put dynamically to avoid compile/runtime issues if not running on Vercel
+      const { put } = await import('@vercel/blob');
+      const blob = await put(filename, file, { access: 'public' });
+      publicUrl = blob.url;
+    } else {
+      const bytes = await file.arrayBuffer();
+      // Save file locally to public/uploads
+      await ensureUploadDir();
+      const filepath = join(UPLOAD_DIR, filename);
+      const buffer = Buffer.from(bytes);
+      await writeFile(filepath, buffer);
+      publicUrl = `/uploads/${filename}`;
+    }
 
     return NextResponse.json(
       {
