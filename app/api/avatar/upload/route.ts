@@ -32,9 +32,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     const uniqueFilename = `${timestamp}-${randomStr}.${ext}`;
 
     if (process.env.BLOB_READ_WRITE_TOKEN) {
-      // Vercel Blob (Private Upload)
+      // Vercel Blob (Public Upload)
       const blob = await put(uniqueFilename, request.body, {
-        access: 'private',
+        access: 'public',
       });
       return NextResponse.json(blob);
     } else {
@@ -49,7 +49,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       // Return a shape similar to PutBlobResult
       return NextResponse.json({
         url: `/uploads/${uniqueFilename}`,
-        pathname: uniqueFilename, // store pathname for retrieval
+        pathname: uniqueFilename,
         contentType: request.headers.get('content-type') || 'image/png',
         contentDisposition: `inline; filename="${uniqueFilename}"`,
       });

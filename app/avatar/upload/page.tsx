@@ -81,7 +81,7 @@ export default function AvatarUploadPage() {
           Upload Your Avatar
         </h1>
         <p className="text-neutral-400 text-sm text-center mb-8">
-          Upload a portrait locally or to private Vercel Blob Storage
+          Upload a portrait locally or to public Vercel Blob Storage
         </p>
 
         {error && (
@@ -173,16 +173,19 @@ export default function AvatarUploadPage() {
           <div className="mt-8 pt-6 border-t border-neutral-800 text-center">
             <p className="text-green-400 text-sm font-semibold mb-3">✓ Upload Successful!</p>
             <a 
-              href={`/api/avatar/view?pathname=${encodeURIComponent(blob.pathname)}`}
+              href={blob.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-neutral-950 border border-[#C9A84C]/40 text-[#C9A84C] text-xs font-bold uppercase tracking-widest rounded-lg transition-all hover:bg-[#C9A84C] hover:text-black hover:border-transparent"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-neutral-950 border border-[#C9A84C]/40 text-[#C9A84C] text-xs font-bold uppercase tracking-widest rounded-lg transition-all hover:bg-[#C9A84C] hover:text-black hover:border-transparent max-w-full truncate"
             >
-              View Private Avatar
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              View Uploaded Avatar
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
               </svg>
             </a>
+            <div className="mt-2 text-xs text-neutral-500 break-all select-all">
+              {blob.url}
+            </div>
           </div>
         )}
       </div>
