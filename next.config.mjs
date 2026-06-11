@@ -11,6 +11,16 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.private.blob.vercel-storage.com',
+      },
+    ],
   },
   turbopack: {
     // Prevent Next from inferring the wrong root due to lockfiles outside this repo.

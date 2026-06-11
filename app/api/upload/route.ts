@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       // Import put dynamically to avoid compile/runtime issues if not running on Vercel
       const { put } = await import('@vercel/blob');
-      const blob = await put(filename, file, { access: 'private' });
+      const blob = await put(filename, file, { access: 'public' });
       publicUrl = blob.url;
     } else {
       const bytes = await file.arrayBuffer();
