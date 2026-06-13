@@ -66,31 +66,31 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '100');
     const { data: records } = await getRecords(collection.name, limit, filters, projection);
 
+    // 4. Fetch fields and DB once — shared across all records
+    const db = await getDb();
+    const { data: fields } = await getCollectionFields(collection.id);
+
+    // Pre-resolve relation collection names once to avoid N+1 DB lookups per record
+    const collectionNameCache = await resolveRelationCollectionNames(fields || []);
+
     // If filtering by slug, return only the matching record
     if (filters.slug && records && records.length > 0) {
       const exactMatch = records.find((r: any) => r.slug === filters.slug);
       if (exactMatch) {
-        // Populate the single record
-        const db = await getDb();
-        const { data: fields } = await getCollectionFields(collection.id);
         const [populated] = await populateRelationLabels([exactMatch], fields || []);
-        
-        const fullPopulated = await populateRecord(populated, fields || [], collection.name, db);
-        
+        const fullPopulated = await populateRecord(populated, fields || [], collection.name, db, collectionNameCache);
         return NextResponse.json({
           success: true,
-          data: [fullPopulated], // Return as array for consistency
+          data: [fullPopulated],
         } as ApiResponse<any>, { status: 200 });
       }
     }
 
-    // 4. Populate relational fields with full objects and labels
-    const db = await getDb();
-    const { data: fields } = await getCollectionFields(collection.id);
+    // Populate relational fields with full objects and labels
     const basePopulated = await populateRelationLabels(records || [], fields || []);
 
     const populatedRecords = await Promise.all((basePopulated || []).map(async (record: any) => {
-      return await populateRecord(record, fields || [], collection.name, db);
+      return await populateRecord(record, fields || [], collection.name, db, collectionNameCache);
     }));
 
     return NextResponse.json({
@@ -117,15 +117,41 @@ export async function GET(
   }
 }
 
-// Helper function to populate a single record
-async function populateRecord(record: any, fields: any[], collectionName: string, db: any) {
+// Pre-resolve all relation collection names for a set of fields (avoids N+1 DB lookups)
+async function resolveRelationCollectionNames(fields: any[]): Promise<Map<string, string | null>> {
+  const relationFields = fields.filter(
+    (f) => f.field_type === 'Relation' && f.relation_to_collection
+  );
+
+  // Deduplicate relation targets
+  const unique = [...new Set(relationFields.map((f) => f.relation_to_collection as string))];
+
+  const entries = await Promise.all(
+    unique.map(async (rel) => [rel, await resolveRelationCollectionName(rel)] as const)
+  );
+
+  return new Map(entries);
+}
+
+// Helper function to populate a single record (uses pre-resolved collection name map)
+async function populateRecord(
+  record: any,
+  fields: any[],
+  collectionName: string,
+  db: any,
+  collectionNameCache?: Map<string, string | null>
+) {
   for (const field of fields) {
     if (field.field_type === 'Relation' && field.relation_to_collection && record[field.name]) {
       try {
         const targetOid = oid(record[field.name]);
         if (!targetOid) continue;
 
-        const targetCollectionName = await resolveRelationCollectionName(field.relation_to_collection);
+        // Use the pre-resolved cache to avoid redundant DB lookups per record
+        const targetCollectionName = collectionNameCache
+          ? collectionNameCache.get(field.relation_to_collection) ?? null
+          : await resolveRelationCollectionName(field.relation_to_collection);
+
         if (!targetCollectionName) continue;
 
         const relatedDoc = await db.collection(targetCollectionName).findOne({ _id: targetOid });
@@ -137,7 +163,9 @@ async function populateRecord(record: any, fields: any[], collectionName: string
         if (targetCollectionName === collectionName && populated[field.name]) {
           const gpOid = oid(populated[field.name]);
           if (gpOid) {
-            const gpCollectionName = await resolveRelationCollectionName(field.relation_to_collection);
+            const gpCollectionName = collectionNameCache
+              ? collectionNameCache.get(field.relation_to_collection) ?? null
+              : await resolveRelationCollectionName(field.relation_to_collection);
             if (gpCollectionName) {
               const gpDoc = await db.collection(gpCollectionName).findOne({ _id: gpOid });
               if (gpDoc) {
@@ -212,7 +240,8 @@ export async function POST(
 
     // Populate relational data for the response
     const { data: fields } = await getCollectionFields(collection.id);
-    const fullPopulated = await populateRecord(normalizedRecord, fields || [], collection.name, db);
+    const collectionNameCache = await resolveRelationCollectionNames(fields || []);
+    const fullPopulated = await populateRecord(normalizedRecord, fields || [], collection.name, db, collectionNameCache);
 
     return NextResponse.json({
       success: true,
