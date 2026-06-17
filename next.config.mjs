@@ -26,6 +26,9 @@ const nextConfig = {
     // Prevent Next from inferring the wrong root due to lockfiles outside this repo.
     root: __dirname,
   },
+  experimental: {
+    proxyClientMaxBodySize: '50mb',
+  },
 }
 
 export default nextConfig

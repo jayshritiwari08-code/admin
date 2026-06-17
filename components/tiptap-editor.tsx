@@ -54,6 +54,7 @@ export function TipTapEditor({
   minHeight = '220px',
 }: TipTapEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAndInsertImageRef = useRef<any>(null);
 
   const editor = useEditor({
     extensions: [
@@ -92,7 +93,7 @@ export function TipTapEditor({
           class: 'text-primary underline underline-offset-2 hover:text-primary/80 transition-colors',
           target: '_blank',
           rel: 'noopener noreferrer',
-        },
+          },
       }),
       Image.extend({
         draggable: true,
@@ -108,7 +109,7 @@ export function TipTapEditor({
           };
         },
       }).configure({
-        allowBase64: true,
+        allowBase64: false,
         HTMLAttributes: {
           class: 'rounded-lg border border-border shadow-sm max-w-full my-2 inline-block mx-1 align-middle cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-primary/50 transition-all',
         },
@@ -143,6 +144,26 @@ export function TipTapEditor({
     content,
     editable,
     editorProps: {
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith('image/')) {
+            uploadAndInsertImageRef.current?.(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event, slice) => {
+        if (event.clipboardData && event.clipboardData.files && event.clipboardData.files[0]) {
+          const file = event.clipboardData.files[0];
+          if (file.type.startsWith('image/')) {
+            uploadAndInsertImageRef.current?.(file);
+            return true;
+          }
+        }
+        return false;
+      },
       attributes: {
         class: [
           'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none',
@@ -189,25 +210,37 @@ export function TipTapEditor({
     }
   }, [editor]);
 
-const addImage = useCallback(() => {
-  fileInputRef.current?.click();
-}, []);
+  const uploadAndInsertImage = useCallback(async (file: File) => {
+    if (!editor) return;
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('fieldType', 'image');
 
-const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!editor) return;
-  const file = e.target.files?.[0];
-  if (!file) return;
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Upload failed');
+      
+      const url = json.data.url as string;
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err: any) {
+      console.error('Image upload failed', err);
+      alert(err?.message || 'Failed to upload image');
+    }
+  }, [editor]);
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const base64 = reader.result as string;
-    editor.chain().focus().setImage({ src: base64 }).run();
-  };
-  reader.readAsDataURL(file);
+  uploadAndInsertImageRef.current = uploadAndInsertImage;
 
-  // Reset so the same file can be picked again
-  e.target.value = '';
-}, [editor]);
+  const addImage = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadAndInsertImage(file);
+    e.target.value = '';
+  }, [uploadAndInsertImage]);
 
 // Save product to API
 const saveProduct = useCallback(async () => {

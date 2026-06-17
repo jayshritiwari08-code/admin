@@ -110,10 +110,21 @@ export async function POST(request: NextRequest) {
     let publicUrl = '';
 
     if (process.env.BLOB_READ_WRITE_TOKEN) {
-      // Import put dynamically to avoid compile/runtime issues if not running on Vercel
-      const { put } = await import('@vercel/blob');
-      const blob = await put(filename, file, { access: 'public' });
-      publicUrl = blob.url;
+      try {
+        // Import put dynamically to avoid compile/runtime issues if not running on Vercel
+        const { put } = await import('@vercel/blob');
+        const blob = await put(filename, file, { access: 'public' });
+        publicUrl = blob.url;
+      } catch (blobError) {
+        console.warn('Vercel Blob upload failed, falling back to local upload:', blobError);
+        const bytes = await file.arrayBuffer();
+        // Save file locally to public/uploads
+        await ensureUploadDir();
+        const filepath = join(UPLOAD_DIR, filename);
+        const buffer = Buffer.from(bytes);
+        await writeFile(filepath, buffer);
+        publicUrl = `/uploads/${filename}`;
+      }
     } else {
       const bytes = await file.arrayBuffer();
       // Save file locally to public/uploads
