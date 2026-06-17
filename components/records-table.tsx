@@ -458,7 +458,7 @@ export function RecordsTable({
           EDIT MODAL
       ══════════════════════════════════════ */}
       <Dialog open={!!editRecord} onOpenChange={(o) => !o && setEditRecord(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-primary">Edit Record</DialogTitle>
           </DialogHeader>

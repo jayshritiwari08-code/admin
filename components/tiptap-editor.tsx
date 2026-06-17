@@ -191,7 +191,7 @@ export function TipTapEditor({
 
   // Sync external content (e.g. when edit modal opens with existing data)
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || editor.isFocused) return;
     const current = editor.getHTML();
     if (content !== current) {
       editor.commands.setContent(content || '', { emitUpdate: false });
@@ -319,20 +319,20 @@ const saveProduct = useCallback(async () => {
       title={title}
       className={`h-7 w-7 p-0 rounded transition-colors ${
         isActive
-          ? 'bg-primary/15 text-primary hover:bg-primary/20'
-          : 'text-foreground/70 hover:bg-muted hover:text-foreground'
+          ? 'bg-white/20 text-white hover:bg-white/25'
+          : 'text-white/80 hover:bg-white/10 hover:text-white'
       }`}
     >
       {children}
     </Button>
   );
-
+ 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-background shadow-sm">
-
+ 
       {editable && (
-        <div className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 border-b border-border bg-muted/40">
-
+        <div className="sticky top-0 z-30 flex items-center gap-0.5 flex-wrap px-2 py-1.5 border-b border-border bg-[#1f8989] text-white">
+ 
           {/* ── Heading / Paragraph dropdown ── */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -340,10 +340,10 @@ const saveProduct = useCallback(async () => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs font-medium min-w-[100px] justify-between gap-1 text-foreground/80 hover:bg-muted"
+                className="h-7 px-2 text-xs font-medium min-w-[100px] justify-between gap-1 text-white hover:bg-white/10"
               >
                 {headingLabel}
-                <span className="text-muted-foreground">▾</span>
+                <span className="text-white/60">▾</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -366,9 +366,9 @@ const saveProduct = useCallback(async () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Text formatting ── */}
           <TB onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
             <Bold className="w-3.5 h-3.5" />
@@ -385,9 +385,9 @@ const saveProduct = useCallback(async () => {
           <TB onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline code">
             <Code className="w-3.5 h-3.5" />
           </TB>
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Lists ── */}
           <TB onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Bullet list">
             <List className="w-3.5 h-3.5" />
@@ -395,9 +395,9 @@ const saveProduct = useCallback(async () => {
           <TB onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} title="Numbered list">
             <ListOrdered className="w-3.5 h-3.5" />
           </TB>
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Blocks ── */}
           <TB onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Blockquote">
             <Quote className="w-3.5 h-3.5" />
@@ -408,37 +408,33 @@ const saveProduct = useCallback(async () => {
           <TB onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal rule">
             <Minus className="w-3.5 h-3.5" />
           </TB>
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Link ── */}
           <TB onClick={setLink} isActive={editor.isActive('link')} title="Insert link">
             <LinkIcon className="w-3.5 h-3.5" />
           </TB>
-
+ 
           {/* ── Image ── */}
           <TB onClick={addImage} title="Insert image">
             <ImagePlus className="w-3.5 h-3.5" />
           </TB>
-
+ 
           {/* ── Image Resizing ── */}
-          {editor.isActive('image') && (
-            <>
-              <Separator orientation="vertical" className="h-5 mx-1" />
-              <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '25%' }).run()} title="Small (25%)">
-                <span className="text-[10px] font-bold">25%</span>
-              </TB>
-              <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '50%' }).run()} title="Medium (50%)">
-                <span className="text-[10px] font-bold">50%</span>
-              </TB>
-              <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%' }).run()} title="Full (100%)">
-                <span className="text-[10px] font-bold">100%</span>
-              </TB>
-            </>
-          )}
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+          <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '25%' }).run()} title="Small (25%)">
+            <span className="text-[10px] font-bold">25%</span>
+          </TB>
+          <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '50%' }).run()} title="Medium (50%)">
+            <span className="text-[10px] font-bold">50%</span>
+          </TB>
+          <TB onClick={() => editor.chain().focus().updateAttributes('image', { width: '100%' }).run()} title="Full (100%)">
+            <span className="text-[10px] font-bold">100%</span>
+          </TB>
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Alignment ── */}
           <TB onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title="Align left">
             <AlignLeft className="w-3.5 h-3.5" />
@@ -452,9 +448,9 @@ const saveProduct = useCallback(async () => {
           <TB onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} title="Justify">
             <AlignJustify className="w-3.5 h-3.5" />
           </TB>
-
-          <Separator orientation="vertical" className="h-5 mx-1" />
-
+ 
+          <Separator orientation="vertical" className="h-5 mx-1 bg-white/20" />
+ 
           {/* ── Tables ── */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -462,7 +458,7 @@ const saveProduct = useCallback(async () => {
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs font-medium text-foreground/80 hover:bg-muted"
+                className="h-7 px-2 text-xs font-medium text-white hover:bg-white/10"
                 title="Insert table"
               >
                 <TableIcon className="w-3.5 h-3.5 mr-1" />
@@ -523,7 +519,7 @@ const saveProduct = useCallback(async () => {
       )}
 
       {/* ── Editor area ── */}
-      <div style={{ minHeight }}>
+      <div className="overflow-y-auto" style={{ minHeight, maxHeight: '400px' }}>
         <EditorContent editor={editor} />
       </div>
 
