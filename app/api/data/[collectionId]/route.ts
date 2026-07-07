@@ -48,7 +48,15 @@ export async function GET(
     
     searchParams.forEach((value, key) => {
       if (key !== 'limit' && key !== 'offset' && key !== 'fields') {
-        filters[key] = value;
+        let cleanValue = value;
+        if (typeof cleanValue === 'string') {
+          if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
+            cleanValue = cleanValue.slice(1, -1);
+          } else if (cleanValue.startsWith("'") && cleanValue.endsWith("'")) {
+            cleanValue = cleanValue.slice(1, -1);
+          }
+        }
+        filters[key] = cleanValue;
       }
     });
 
