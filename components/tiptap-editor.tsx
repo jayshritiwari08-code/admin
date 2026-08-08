@@ -101,7 +101,7 @@ export function TipTapEditor({
           return {
             ...this.parent?.(),
             width: {
-              default: '50%',
+              default: '100%',
               renderHTML: attributes => ({
                 style: `width: ${attributes.width}; height: auto;`,
               }),
