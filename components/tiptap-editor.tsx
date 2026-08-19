@@ -164,6 +164,11 @@ export function TipTapEditor({
         }
         return false;
       },
+      transformPastedHTML: (html) => {
+        return html
+          .replace(/<p[^>]*>(\s|<br>)*<\/p>/gi, '') // Remove empty paragraphs or paragraphs with just a <br>
+          .replace(/(<br\s*\/?>\s*){2,}/gi, '<br>'); // Replace multiple <br>s with a single <br>
+      },
       attributes: {
         class: [
           'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none',

@@ -48,9 +48,10 @@ function resolveNodeLabel(node: any) {
   return (
     node.display_name ||
     node.name ||
+    node.title ||
+    node.heading ||
     node.category_name ||
     node.category ||
-    node.title ||
     node.category_slug ||
     node.slug ||
     node.id ||
