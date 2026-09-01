@@ -4,6 +4,38 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Loader2, Plus, Database, ChevronRight, ChevronDown, FileText, Folder, FolderPlus, MoreVertical, Trash2, Palette, Layout, MapPin, LayoutDashboard } from 'lucide-react';
+
+// Map old lucide-style icon names to emojis (backward compat with string icon values)
+const ICON_NAME_TO_EMOJI: Record<string, string> = {
+  'layout-dashboard': '🌟',
+  'user': 'ℹ️',
+  'heading': '📝',
+  'type': '📝',
+  'folder': '📂',
+  'folder-tree': '📂',
+  'file-text': '📚',
+  'briefcase': '⚙️',
+  'columns': '📌',
+  'help-circle': '❓',
+  'search': '🔍',
+  'mail': '✉️',
+  'star': '⭐',
+  'settings': '⚙️',
+  'image': '🖼️',
+  'calendar': '📅',
+  'target': '🎯',
+  'gold': '🌟',
+  'blue': '💎',
+  'purple': '💜',
+  'indigo': '🔮',
+  'green': '📂',
+  'orange': '📚',
+  'teal': '⚙️',
+  'gray': '📌',
+  'cyan': '❓',
+  'yellow': '🔍',
+  'red': '✉️',
+};
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-client';
 import { useSidebar } from '@/components/context/sidebar-context';
@@ -149,9 +181,19 @@ export function Sidebar() {
 
   if (pathname.startsWith('/login')) return null;
 
+  // Resolve icon string to a renderable emoji
+  const resolveIcon = (icon?: string): string => {
+    if (!icon) return '📦';
+    // Already an emoji (starts with non-ASCII or is a single/double char emoji)
+    if (/^[^\x00-\x7F]/.test(icon) || /\p{Emoji}/u.test(icon)) return icon;
+    // Map text name to emoji
+    return ICON_NAME_TO_EMOJI[icon.toLowerCase()] || '📦';
+  };
+
   // Helper to render a collection item
   const renderCollectionItem = (c: Collection) => {
     const isActive = pathname === `/collections/${c.id}`;
+    const emoji = resolveIcon(c.icon);
     return (
       <div 
         key={c.id}
@@ -166,7 +208,9 @@ export function Sidebar() {
             isActive ? 'bg-primary text-primary-foreground font-medium' : 'text-foreground/70'
           )}
         >
-          {c.icon || <FileText className="w-4 h-4 opacity-60" />}
+          <span className="w-5 h-5 flex items-center justify-center text-base flex-shrink-0" role="img" aria-label={c.display_name}>
+            {emoji}
+          </span>
           {isOpen && <span className="truncate text-sm">{c.display_name}</span>}
         </Link>
       </div>

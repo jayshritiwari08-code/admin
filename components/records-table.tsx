@@ -591,7 +591,7 @@ function renderViewValue(record: RecordRow, field: Field) {
 // ── Table cell value renderer (compact) ──
 function resolvePopulatedLabel(obj: any): string {
   if (!obj || typeof obj !== 'object') return '';
-  const label = obj.category || obj.category_name || obj.display_name || obj.name || obj.title || obj.label || obj.slug || obj.id;
+  const label = obj.heading || obj.category || obj.category_name || obj.display_name || obj.name || obj.title || obj.label || obj.slug || obj.id;
   const nestedKey = Object.keys(obj).find((k) => k.endsWith('_populated'));
   if (nestedKey && obj[nestedKey]) return `${resolvePopulatedLabel(obj[nestedKey])} › ${label}`;
   return label || 'Unnamed';
