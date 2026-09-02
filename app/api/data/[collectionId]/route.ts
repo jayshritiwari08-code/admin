@@ -216,6 +216,14 @@ export async function POST(
     const body = await request.json();
     const db = await getDb();
 
+    // Auto-derive slug prioritizing title over category if slug was not explicitly provided
+    if (!body.slug || typeof body.slug !== 'string' || body.slug.trim() === '') {
+      const sourceText = body.title || body.name || body.display_name || body.category;
+      if (sourceText) {
+        body.slug = slugify(String(sourceText));
+      }
+    }
+
     // Sanitize the slug provided by the frontend
     // This ensures that even if the user manually typed " My Page ", it's saved as "my-page"
     if (body.slug && typeof body.slug === 'string') {

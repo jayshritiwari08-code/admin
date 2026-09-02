@@ -38,9 +38,28 @@ export function RecordForm({ collectionId, fields, onCreated }: Props) {
     setFormData((prev) => {
       const next = { ...prev, [name]: value };
       
-      // Auto-generate slug if it exists in fields and source is a "name" field
-      if (['name', 'title', 'display_name', 'category'].includes(name) && fields.some(f => f.name === 'slug')) {
-        next['slug'] = slugify(String(value));
+      // Auto-generate slug if it exists in fields
+      // If title and category both exist, slug should be created based on title instead of category
+      if (fields.some(f => f.name === 'slug')) {
+        const hasTitle = fields.some(f => f.name === 'title');
+        const hasName = fields.some(f => f.name === 'name');
+        const hasDisplayName = fields.some(f => f.name === 'display_name');
+
+        if (hasTitle) {
+          if (name === 'title') {
+            next['slug'] = slugify(String(value));
+          }
+        } else if (hasName) {
+          if (name === 'name') {
+            next['slug'] = slugify(String(value));
+          }
+        } else if (hasDisplayName) {
+          if (name === 'display_name') {
+            next['slug'] = slugify(String(value));
+          }
+        } else if (name === 'category') {
+          next['slug'] = slugify(String(value));
+        }
       }
 
       // Auto-generate category_slug if category_name is changed

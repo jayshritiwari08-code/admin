@@ -142,9 +142,28 @@ export function RecordsTable({
     const setValue = (v: any) => setEditData((prev) => {
       const next = { ...prev, [field.name]: v };
 
-      // Auto-generate slug if it exists in fields and source is a "name" field
-      if (['name', 'title', 'display_name', 'category'].includes(field.name) && fields.some(f => f.name === 'slug')) {
-        next['slug'] = slugify(String(v));
+      // Auto-generate slug if it exists in fields
+      // If title and category both exist, slug should be created based on title instead of category
+      if (fields.some(f => f.name === 'slug')) {
+        const hasTitle = fields.some(f => f.name === 'title');
+        const hasName = fields.some(f => f.name === 'name');
+        const hasDisplayName = fields.some(f => f.name === 'display_name');
+
+        if (hasTitle) {
+          if (field.name === 'title') {
+            next['slug'] = slugify(String(v));
+          }
+        } else if (hasName) {
+          if (field.name === 'name') {
+            next['slug'] = slugify(String(v));
+          }
+        } else if (hasDisplayName) {
+          if (field.name === 'display_name') {
+            next['slug'] = slugify(String(v));
+          }
+        } else if (field.name === 'category') {
+          next['slug'] = slugify(String(v));
+        }
       }
 
       // Auto-generate category_slug if category_name is changed
